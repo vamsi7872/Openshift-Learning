@@ -1,0 +1,282 @@
+{
+  "ignition": {
+    "version": "3.4.0",
+    "config": {
+      "replace": {
+        "source": "https://config.example.com/ignition/base-config.json",
+        "verification": {
+          "hash": "sha512-abcd1234..."
+        }
+      }
+    },
+    "security": {
+      "tls": {
+        "certificateAuthorities": [
+          {
+            "source": "data:text/plain;charset=utf-8;base64,LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0t..."
+          }
+        ]
+      }
+    },
+    "timeouts": {
+      "httpResponseHeaders": 10,
+      "httpTotal": 120
+    }
+  },
+  "passwd": {
+    "users": [
+      {
+        "name": "core",
+        "uid": 1000,
+        "gecos": "CoreOS default user",
+        "homeDir": "/home/core",
+        "noCreateHome": false,
+        "primaryGroup": "core",
+        "groups": ["sudo", "docker", "wheel"],
+        "sshAuthorizedKeys": [
+          "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC5vD...",
+          "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJw3eK..."
+        ],
+        "passwordHash": "$y$j9T$3HSHWpbhfZ8x.M9UfZIXe0$..."
+      },
+      {
+        "name": "monitoring",
+        "uid": 2000,
+        "gecos": "Monitoring agent user",
+        "homeDir": "/home/monitoring",
+        "noCreateHome": false,
+        "primaryGroup": "monitoring",
+        "shell": "/usr/sbin/nologin",
+        "groups": ["adm", "systemd-journal"]
+      },
+      {
+        "name": "audit",
+        "uid": 3000,
+        "gecos": "Audit and logging user",
+        "homeDir": "/var/log/audit",
+        "noCreateHome": true,
+        "shell": "/usr/sbin/nologin",
+        "groups": ["systemd-journal"]
+      }
+    ],
+    "groups": [
+      {
+        "name": "monitoring",
+        "gid": 2000
+      },
+      {
+        "name": "audit",
+        "gid": 3000
+      }
+    ]
+  },
+  "storage": {
+    "disks": [
+      {
+        "device": "/dev/sda",
+        "wipeTable": false,
+        "partitions": [
+          {
+            "label": "root",
+            "number": 1,
+            "sizeMiB": 0,
+            "typeGuid": "4F68BCE3-E8CD-4DB1-96E7-FBCAF984B709",
+            "wipePartitionEntry": false
+          }
+        ]
+      }
+    ],
+    "filesystems": [
+      {
+        "device": "/dev/mapper/coreos-root",
+        "format": "xfs",
+        "label": "root",
+        "wipeFilesystem": false,
+        "options": ["-F", "-m", "crc=1,finobt=1"]
+      },
+      {
+        "device": "/dev/sda2",
+        "format": "xfs",
+        "label": "data",
+        "path": "/data",
+        "options": ["-F", "-d", "su=4k", "-d", "sw=1"]
+      }
+    ],
+    "directories": [
+      {
+        "path": "/etc/kubernetes",
+        "mode": 493,
+        "user": {
+          "name": "root"
+        },
+        "group": {
+          "name": "root"
+        }
+      },
+      {
+        "path": "/var/log/containers",
+        "mode": 493,
+        "user": {
+          "name": "root"
+        },
+        "group": {
+          "name": "root"
+        }
+      },
+      {
+        "path": "/opt/custom-scripts",
+        "mode": 493,
+        "user": {
+          "name": "root"
+        },
+        "group": {
+          "name": "root"
+        }
+      },
+      {
+        "path": "/var/log/audit",
+        "mode": 448,
+        "user": {
+          "name": "audit"
+        },
+        "group": {
+          "name": "audit"
+        }
+      }
+    ],
+    "files": [
+      {
+        "path": "/etc/hostname",
+        "mode": 420,
+        "overwrite": true,
+        "user": {
+          "name": "root"
+        },
+        "group": {
+          "name": "root"
+        },
+        "contents": {
+          "source": "data:text/plain;charset=utf-8,worker-node-01.example.com"
+        }
+      },
+      {
+        "path": "/etc/sysctl.d/99-custom-kernel-params.conf",
+        "mode": 420,
+        "overwrite": true,
+        "contents": {
+          "source": "data:text/plain;charset=utf-8,%23%20Custom%20Kernel%20Parameters%0Anet.core.somaxconn%3D65535%0Anet.ipv4.ip_local_port_range%3D1024%2065535%0Anet.ipv4.tcp_tw_reuse%3D1%0Afs.file-max%3D2097152%0Afs.inotify.max_user_watches%3D524288"
+        }
+      },
+      {
+        "path": "/etc/security/limits.d/99-custom-limits.conf",
+        "mode": 420,
+        "overwrite": true,
+        "contents": {
+          "source": "data:text/plain;charset=utf-8,%2A%20soft%20nofile%2065535%0A%2A%20hard%20nofile%2065535%0A%2A%20soft%20nproc%204096%0A%2A%20hard%20nproc%204096"
+        }
+      },
+      {
+        "path": "/etc/environment",
+        "mode": 420,
+        "overwrite": false,
+        "append": [
+          {
+            "source": "data:text/plain;charset=utf-8,HTTP_PROXY%3Dhttp%3A%2F%2Fproxy.example.com%3A8080%0AHTTPS_PROXY%3Dhttps%3A%2F%2Fproxy.example.com%3A8443%0ANO_PROXY%3Dlocalhost%2C127.0.0.1%2C.example.com"
+          }
+        ]
+      },
+      {
+        "path": "/opt/custom-scripts/health-check.sh",
+        "mode": 493,
+        "user": {
+          "name": "root"
+        },
+        "contents": {
+          "source": "data:text/plain;charset=utf-8,%23%21%2Fbin%2Fbash%0ASET%20-e%0Aecho%20%22Performing%20health%20checks...%22%0Acurl%20-sf%20http%3A%2F%2Flocalhost%3A6443%2Fversion%20%3E%2Fdev%2Fnull%20%26%26%20echo%20%22Kubelet%20is%20ready%22%20%7C%7C%20exit%201%0Asystemctl%20is-active%20--quiet%20kubelet%20%26%26%20echo%20%22Kubelet%20service%20active%22"
+        }
+      },
+      {
+        "path": "/etc/kubernetes/kubeconfig.yml",
+        "mode": 384,
+        "user": {
+          "name": "core"
+        },
+        "group": {
+          "name": "core"
+        },
+        "contents": {
+          "source": "data:text/plain;charset=utf-8;base64,YXBpVmVyc2lvbjogdjEKa2luZDogQ29uZmlnCmNsdXN0ZXJzOgotIGNsdXN0ZXI6CiAgICBjZXJ0aWZpY2F0ZS1hdXRob3JpdHk6IC9ldGMva3ViZXJuZXRlcy9jYS5jcnQKICAgIHNlcnZlcjogaHR0cHM6Ly9hcGkua3ViZXJuZXRlcy5leGFtcGxlLmNvbQogIG5hbWU6IGt1YmVybmV0ZXMKY29udGV4dHM6Ci0gY29udGV4dDoKICAgIGNsdXN0ZXI6IGt1YmVybmV0ZXMKICAgIHVzZXI6IHN5c3RlbTphZG1pbjphZG1pbgogIG5hbWU6IGt1YmVybmV0ZXMtYWRtaW4KY3VycmVudC1jb250ZXh0OiBrdWJlcm5ldGVzLWFkbWluCnByZWZlcmVuY2VzOiB7fQp1c2VyczoKLSBuYW1lOiBzeXN0ZW06YWRtaW46YWRtaW4KICB1c2VyOgogICAgY2xpZW50LWNlcnRpZmljYXRlOiAvZXRjL2t1YmVybmV0ZXMvYWRtaW4uY3J0CiAgICBjbGllbnQta2V5OiAvZXRjL2t1YmVybmV0ZXMvYWRtaW4ua2V5"
+        }
+      },
+      {
+        "path": "/etc/crio/crio.conf.d/99-custom.conf",
+        "mode": 420,
+        "overwrite": true,
+        "contents": {
+          "source": "data:text/plain;charset=utf-8,%5Bcrio.runtime%5D%0Adefault_runtime%20%3D%20%22crio%22%0Acgroup_manager%20%3D%20%22systemd%22%0Alog_level%20%3D%20%22info%22%0A%5Bcrio.image%5D%0Apause_image%20%3D%20%22registry.example.com%2Fpause%3A3.6%22"
+        }
+      }
+    ],
+    "links": [
+      {
+        "path": "/etc/ssl/certs/ca-certificates.crt",
+        "target": "/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem",
+        "hard": false,
+        "overwrite": true
+      }
+    ]
+  },
+  "systemd": {
+    "units": [
+      {
+        "name": "kubelet-cgroup-cleanup.service",
+        "enabled": true,
+        "contents": "[Unit]\nDescription=Cleanup kubelet cgroup on startup\nBefore=kubelet.service\nAfter=network.target\n\n[Service]\nType=oneshot\nExecStart=/usr/local/bin/cleanup-cgroups.sh\nRemainAfterExit=true\nStandardOutput=journal\nStandardError=journal\n\n[Install]\nWantedBy=multi-user.target"
+      },
+      {
+        "name": "kubelet.service",
+        "enabled": true,
+        "contents": "[Unit]\nDescription=Kubernetes kubelet\nRequires=crio.service\nAfter=crio.service network-online.target\nWants=network-online.target kubelet-cgroup-cleanup.service\nConditionPathExists=/etc/kubernetes/kubeconfig.yml\n\n[Service]\nType=notify\nRestart=on-failure\nRestartSec=5s\nDelegate=yes\nKillMode=mixed\nEnvironmentFile=/etc/environment\nExecStartPre=/usr/local/bin/preflight-check.sh\nExecStart=/usr/bin/kubelet \\\n  --kubeconfig=/etc/kubernetes/kubeconfig.yml \\\n  --container-runtime=remote \\\n  --container-runtime-endpoint=unix:///var/run/crio/crio.sock \\\n  --node-labels=node-type=worker,zone=us-east-1a \\\n  --pod-infra-container-image=registry.example.com/pause:3.6 \\\n  --max-pods=250 \\\n  --memory-manager=static \\\n  --memory-manager-reserved-memory=0.Mi:1Gi,1:2Gi \\\n  --system-reserved=cpu=100m,memory=256Mi,ephemeral-storage=1Gi \\\n  --kube-reserved=cpu=100m,memory=256Mi,ephemeral-storage=1Gi \\\n  --eviction-hard=memory.available<5%,nodefs.available<10%\nExecStopPost=/usr/local/bin/kubelet-cleanup.sh\nSyslogIdentifier=kubelet\nStandardOutput=journal\nStandardError=journal\n\n[Install]\nWantedBy=multi-user.target"
+      },
+      {
+        "name": "crio.service",
+        "enabled": true,
+        "contents": "[Unit]\nDescription=CRI-O OCI container runtime\nAfter=network.target crio-wipe.service\nWants=crio-wipe.service\n\n[Service]\nType=notify\nRestart=on-failure\nRestartSec=5s\nEnvironmentFile=/etc/environment\nExecStart=/usr/bin/crio --log-level info\nExecReload=/bin/kill -HUP $MAINPID\nKillMode=process\nDelegate=yes\nLimitNOFILE=infinity\nLimitNPROC=infinity\nLimitCORE=infinity\nTasksMax=infinity\nTimeoutStartSec=0\nOOMScoreAdjust=-999\nSyslogIdentifier=crio\nStandardOutput=journal\nStandardError=journal\n\n[Install]\nWantedBy=multi-user.target"
+      },
+      {
+        "name": "node-exporter.timer",
+        "enabled": true,
+        "contents": "[Unit]\nDescription=Periodic node metrics export\nRequires=node-exporter.service\n\n[Timer]\nOnBootSec=1min\nOnUnitActiveSec=1min\nAccuracySec=1s\nPersistent=true\n\n[Install]\nWantedBy=timers.target"
+      },
+      {
+        "name": "node-exporter.service",
+        "enabled": false,
+        "contents": "[Unit]\nDescription=Export node metrics\nAfter=network.target\n\n[Service]\nType=oneshot\nUser=monitoring\nGroup=monitoring\nExecStart=/usr/local/bin/node-exporter.sh\nStandardOutput=journal\nStandardError=journal\n\n[Install]\nWantedBy=multi-user.target"
+      },
+      {
+        "name": "audit-logging.service",
+        "enabled": true,
+        "contents": "[Unit]\nDescription=Enhanced audit logging daemon\nAfter=network.target filesystem.target\nRequires=audit-logging.socket\n\n[Service]\nType=simple\nUser=audit\nGroup=audit\nExecStart=/usr/local/bin/audit-log-daemon\nRestart=always\nRestartSec=10s\nStandardOutput=journal\nStandardError=journal\nSyslogIdentifier=audit-daemon\n\n[Install]\nWantedBy=multi-user.target"
+      },
+      {
+        "name": "audit-logging.socket",
+        "enabled": true,
+        "contents": "[Unit]\nDescription=Audit Logging Socket\n\n[Socket]\nListenStream=9200\nAccept=false\n\n[Install]\nWantedBy=sockets.target"
+      },
+      {
+        "name": "security-hardening.service",
+        "enabled": true,
+        "contents": "[Unit]\nDescription=Apply security hardening settings\nBefore=kubelet.service\n\n[Service]\nType=oneshot\nExecStart=/usr/bin/sysctl --system\nExecStart=/usr/bin/systemctl apply-kernel-cmdline-params\nRemainAfterExit=true\n\n[Install]\nWantedBy=multi-user.target"
+      }
+    ]
+  },
+  "networkd": {
+    "units": [
+      {
+        "name": "00-eth0.network",
+        "contents": "[Match]\nName=eth0\n\n[Network]\nDHCP=yes\nDNSSEC=allow-downgrade\nFallbackDNS=8.8.8.8 8.8.4.4\nRoutes=\n\n[DHCP]\nUseDNS=true\nUseNTP=true"
+      }
+    ]
+  }
+}
+
